@@ -10,6 +10,7 @@ public:
 
 	float y;
 	float ySpeed;
+	Sprite* sprites;
 
 	virtual void load() override;
 	virtual void unload() override;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "graphics.hpp"
+#include "sprite.hpp"
 
 class GameLevel
 {
