@@ -3,7 +3,51 @@
 #include <Windows.h>
 #include <d2d1.h>
 
-Graphics::Graphics(HWND& hwnd)
+// Static members
+ID2D1Factory* Graphics::factory = nullptr;
+ID2D1HwndRenderTarget* Graphics::render = nullptr;
+ID2D1SolidColorBrush* Graphics::brush = nullptr;
+
+// Struct Color
+Color::Color()
+: r(0), g(0), b(0), a(0) {}
+
+Color::Color(const Color& other)
+: r(other.r), g(other.g), b(other.b), a(other.a) {}
+
+Color::Color(std::uint8_t r, std::uint8_t g, std::uint8_t b, std::uint8_t a)
+: r(r), g(g), b(b), a(a) {}
+
+// Struct Vector2
+Vector2::Vector2()
+: x(0.0f), y(0.0f) {}
+
+Vector2::Vector2(const Vector2& other)
+: x(other.x), y(other.y) {}
+
+Vector2::Vector2(float x, float y)
+: x(x), y(y) {}
+
+// Struct Rect
+Rect::Rect()
+: pos(0.0f, 0.0f), size(0.0f, 0.0f) {}
+
+Rect::Rect(const Rect& other)
+: pos(other.pos), size(other.size) {}
+
+Rect::Rect(float x, float y, float w, float h)
+: pos(x, y), size(w, h) {}
+
+Rect::Rect(const Vector2& pos, const Vector2& size)
+: pos(pos), size(size) {}
+
+void Rect::draw(const Color& color)
+{
+	Graphics::brush->SetColor({color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f});
+	Graphics::render->FillRectangle({pos.x, pos.y, pos.x + size.x, pos.y + size.y}, Graphics::brush);
+}
+
+void Graphics::initialize(HWND& hwnd)
 {
 	// Create factory
 	const D2D1_FACTORY_OPTIONS factoryOptions = { .debugLevel = D2D1_DEBUG_LEVEL_NONE };
@@ -29,44 +73,16 @@ Graphics::Graphics(HWND& hwnd)
 		.presentOptions = D2D1_PRESENT_OPTIONS_NONE
 	};
 
-	factory->CreateHwndRenderTarget(rtProperties, hwndRtProperties, &renderTarget);
+	factory->CreateHwndRenderTarget(rtProperties, hwndRtProperties, &render);
 
 	// Create default brush
 	const D2D1_COLOR_F color = { .r = 0.0f, .g = 0.0f, .b = 0.0f, .a = 0.0f };
-	renderTarget->CreateSolidColorBrush(color, &brush);
-
-
-	/*DEBUG*/
-	
-	D2D1_PIXEL_FORMAT pixelFormatRenderTexture =
-	{
-		.format = DXGI_FORMAT_UNKNOWN,
-		.alphaMode = D2D1_ALPHA_MODE_PREMULTIPLIED
-	};
-
-	D2D1_SIZE_U sizeRenderTexture =
-	{
-		.width = 100,
-		.height = 100
-	};
-
-	renderTarget->CreateCompatibleRenderTarget(
-		nullptr,
-		&sizeRenderTexture,
-		&pixelFormatRenderTexture,
-		D2D1_COMPATIBLE_RENDER_TARGET_OPTIONS_NONE,
-		&renderTexture
-	);
-
-	renderTexture->GetBitmap(&bitmapRenderTexture);
-	/**/
+	render->CreateSolidColorBrush(color, &brush);
 }
 
-Graphics::~Graphics()
+void Graphics::finalize()
 {
-	bitmapRenderTexture->Release();
-	renderTexture->Release();
 	brush->Release();
-	renderTarget->Release();
+	render->Release();
 	factory->Release();
 }
