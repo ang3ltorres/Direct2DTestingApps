@@ -34,10 +34,38 @@ Graphics::Graphics(HWND& hwnd)
 	// Create default brush
 	const D2D1_COLOR_F color = { .r = 0.0f, .g = 0.0f, .b = 0.0f, .a = 0.0f };
 	renderTarget->CreateSolidColorBrush(color, &brush);
+
+
+	/*DEBUG*/
+	
+	D2D1_PIXEL_FORMAT pixelFormatRenderTexture =
+	{
+		.format = DXGI_FORMAT_UNKNOWN,
+		.alphaMode = D2D1_ALPHA_MODE_PREMULTIPLIED
+	};
+
+	D2D1_SIZE_U sizeRenderTexture =
+	{
+		.width = 100,
+		.height = 100
+	};
+
+	renderTarget->CreateCompatibleRenderTarget(
+		nullptr,
+		&sizeRenderTexture,
+		&pixelFormatRenderTexture,
+		D2D1_COMPATIBLE_RENDER_TARGET_OPTIONS_NONE,
+		&renderTexture
+	);
+
+	renderTexture->GetBitmap(&bitmapRenderTexture);
+	/**/
 }
 
 Graphics::~Graphics()
 {
+	bitmapRenderTexture->Release();
+	renderTexture->Release();
 	brush->Release();
 	renderTarget->Release();
 	factory->Release();

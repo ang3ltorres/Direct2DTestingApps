@@ -41,6 +41,18 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	Graphics* gfx = new Graphics(hwnd);
 
 	float pos = 0.0f;
+	float rotation = 0.0f;
+
+	/*DEBUG*/
+	// We draw only one time
+	gfx->renderTexture->BeginDraw();
+	gfx->renderTexture->Clear(D2D1::ColorF(D2D1::ColorF::Yellow));
+	gfx->brush->SetColor(D2D1::ColorF(1.0f, 0.0f, 1.0f));
+	gfx->renderTexture->FillEllipse(D2D1::Ellipse(D2D1::Point2F(50.0f, 50.0f), 25.0f, 25.0f), gfx->brush);
+	gfx->brush->SetColor(D2D1::ColorF(0.0f, 1.0f, 0.0f));
+	gfx->renderTexture->FillEllipse(D2D1::Ellipse(D2D1::Point2F(50.0f, 50.0f), 10.0f, 10.0f), gfx->brush);
+	gfx->renderTexture->EndDraw();
+	/**/
 
 	while (true)
 	{
@@ -54,9 +66,21 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 		}
 
 		pos += 1.0f;
+		rotation += 2.0f;
 
 		gfx->renderTarget->BeginDraw();
 		gfx->renderTarget->Clear(D2D1::ColorF(0.0f, 1.0f, 1.0f));
+
+		/*DEBUG*/
+		// Draw the texture in the main target
+		D2D1_MATRIX_3X2_F translationToCenter = D2D1::Matrix3x2F::Translation(-200.0f, -200.0f);
+		D2D1_MATRIX_3X2_F rotationMatrix = D2D1::Matrix3x2F::Rotation(rotation);
+		D2D1_MATRIX_3X2_F translationBack = D2D1::Matrix3x2F::Translation(200.0f, 200.0f);
+
+		gfx->renderTarget->SetTransform(translationToCenter * rotationMatrix * translationBack);
+		gfx->renderTarget->DrawBitmap(gfx->bitmapRenderTexture, D2D1::RectF(0.0f, 0.0f, 400.0f, 400.0f), 1.0f, D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR);
+		gfx->renderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
+		/**/
 
 		gfx->brush->SetColor(D2D1::ColorF(1.0f, 0.0f, 0.0f));
 		gfx->renderTarget->FillRectangle(D2D1::RectF(pos, pos, pos + 50.0f, pos + 50.0f), gfx->brush);
