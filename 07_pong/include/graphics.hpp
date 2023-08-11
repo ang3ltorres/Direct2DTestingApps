@@ -1,7 +1,9 @@
 #pragma once
 
-#include <Windows.h>
-#include <d2d1.h>
+typedef struct HWND__* HWND;
+struct ID2D1Factory;
+struct ID2D1HwndRenderTarget;
+struct ID2D1SolidColorBrush;
 
 class Graphics
 {

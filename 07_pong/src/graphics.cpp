@@ -1,5 +1,8 @@
 #include "graphics.hpp"
 
+#include <Windows.h>
+#include <d2d1.h>
+
 Graphics::Graphics(HWND& hwnd)
 {
 	// Create factory
