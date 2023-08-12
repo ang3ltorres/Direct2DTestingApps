@@ -7,6 +7,13 @@
 ID2D1Factory* Graphics::factory = nullptr;
 ID2D1HwndRenderTarget* Graphics::render = nullptr;
 ID2D1SolidColorBrush* Graphics::brush = nullptr;
+ID2D1RenderTarget* Graphics::currentTarget = nullptr;
+
+// Static helpers
+static const auto D2DColor = [](const Color& color) -> D2D_COLOR_F
+{
+	return {color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f};
+};
 
 // Struct Color
 Color::Color()
@@ -15,7 +22,7 @@ Color::Color()
 Color::Color(const Color& other)
 : r(other.r), g(other.g), b(other.b), a(other.a) {}
 
-Color::Color(std::uint8_t r, std::uint8_t g, std::uint8_t b, std::uint8_t a)
+Color::Color(unsigned char r, unsigned char g, unsigned char b, unsigned char a)
 : r(r), g(g), b(b), a(a) {}
 
 // Struct Vector2
@@ -43,8 +50,118 @@ Rect::Rect(const Vector2& pos, const Vector2& size)
 
 void Rect::draw(const Color& color)
 {
-	Graphics::brush->SetColor({color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f});
-	Graphics::render->FillRectangle({pos.x, pos.y, pos.x + size.x, pos.y + size.y}, Graphics::brush);
+	Graphics::brush->SetColor(D2DColor(color));
+	Graphics::currentTarget->FillRectangle({pos.x, pos.y, pos.x + size.x, pos.y + size.y}, Graphics::brush);
+}
+
+RenderTexture::RenderTexture(unsigned int width, unsigned int height)
+{
+	static const D2D1_PIXEL_FORMAT pixelFormat =
+	{
+		.format = DXGI_FORMAT_UNKNOWN,
+		.alphaMode = D2D1_ALPHA_MODE_PREMULTIPLIED
+	};
+
+	const D2D1_SIZE_U size =
+	{
+		.width = width,
+		.height = height
+	};
+
+	Graphics::render->CreateCompatibleRenderTarget
+	(
+		nullptr,
+		&size,
+		&pixelFormat,
+		D2D1_COMPATIBLE_RENDER_TARGET_OPTIONS_NONE,
+		&renderTarget
+	);
+
+	renderTarget->GetBitmap(&bitmap);
+}
+
+RenderTexture::~RenderTexture()
+{
+	bitmap->Release();
+	renderTarget->Release();
+}
+
+void RenderTexture::beginDraw()
+{
+	Graphics::currentTarget = renderTarget;
+	renderTarget->BeginDraw();
+}
+
+void RenderTexture::endDraw()
+{
+	Graphics::resetTarget();
+	renderTarget->EndDraw();
+}
+
+void RenderTexture::draw()
+{
+	Graphics::currentTarget->DrawBitmap
+	(
+		bitmap,
+		{
+			0.0f,
+			0.0f,
+			bitmap->GetSize().width,
+			bitmap->GetSize().height
+		},
+		1.0f,
+		D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR,
+		{
+			0.0f,
+			0.0f,
+			bitmap->GetSize().width,
+			bitmap->GetSize().height
+		}
+	);
+}
+
+void RenderTexture::draw(const Rect& destination)
+{
+	Graphics::currentTarget->DrawBitmap
+	(
+		bitmap,
+		{
+			destination.pos.x,
+			destination.pos.y,
+			destination.pos.x + destination.size.x,
+			destination.pos.y + destination.size.y
+		},
+		1.0f,
+		D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR,
+		{
+			0.0f,
+			0.0f,
+			bitmap->GetSize().width,
+			bitmap->GetSize().height
+		}
+	);
+}
+
+void RenderTexture::draw(const Rect& destination, const Rect& source)
+{
+	Graphics::currentTarget->DrawBitmap
+	(
+		bitmap,
+		{
+			destination.pos.x,
+			destination.pos.y,
+			destination.pos.x + destination.size.x,
+			destination.pos.y + destination.size.y
+		},
+		1.0f,
+		D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR,
+		{
+			source.pos.x,
+			source.pos.y,
+			source.size.x,
+			source.size.y
+		}
+	);
 }
 
 void Graphics::initialize(HWND& hwnd)
@@ -74,6 +191,9 @@ void Graphics::initialize(HWND& hwnd)
 	};
 
 	factory->CreateHwndRenderTarget(rtProperties, hwndRtProperties, &render);
+	
+	// Set as initial target
+	currentTarget = render;
 
 	// Create default brush
 	const D2D1_COLOR_F color = { .r = 0.0f, .g = 0.0f, .b = 0.0f, .a = 0.0f };
@@ -85,4 +205,24 @@ void Graphics::finalize()
 	brush->Release();
 	render->Release();
 	factory->Release();
+}
+
+void Graphics::resetTarget()
+{
+	currentTarget = render;
+}
+
+void Graphics::clear(const Color& color)
+{
+	currentTarget->Clear(D2DColor(color));
+}
+
+void Graphics::beginDraw()
+{
+	resetTarget();
+	render->BeginDraw();
+}
+void Graphics::endDraw()
+{
+	render->EndDraw();
 }

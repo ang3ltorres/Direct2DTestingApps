@@ -1,23 +1,24 @@
 #pragma once
 
-#include <cstdint>
-
 typedef struct HWND__* HWND;
 struct ID2D1Factory;
 struct ID2D1HwndRenderTarget;
 struct ID2D1SolidColorBrush;
+struct ID2D1BitmapRenderTarget;
+struct ID2D1Bitmap;
+struct ID2D1RenderTarget;
 
 struct Color
 {
 	Color();
 	Color(const Color& other);
-	Color(std::uint8_t r = 0, std::uint8_t g = 0, std::uint8_t b = 0, std::uint8_t a = 255);
+	Color(unsigned char r = 0, unsigned char g = 0, unsigned char b = 0, unsigned char a = 255);
 	~Color() = default;
 
-	std::uint8_t r;
-	std::uint8_t g;
-	std::uint8_t b;
-	std::uint8_t a;
+	unsigned char r;
+	unsigned char g;
+	unsigned char b;
+	unsigned char a;
 };
 
 struct Vector2
@@ -45,6 +46,23 @@ struct Rect
 	void draw(const Color& color);
 };
 
+struct RenderTexture
+{
+	RenderTexture() = delete;
+	RenderTexture(const RenderTexture& other) = delete;
+	RenderTexture(unsigned int width, unsigned int height);
+	~RenderTexture();
+
+	ID2D1BitmapRenderTarget* renderTarget;
+	ID2D1Bitmap* bitmap;
+
+	void beginDraw();
+	void endDraw();
+	void draw();
+	void draw(const Rect& destination);
+	void draw(const Rect& destination, const Rect& source);
+};
+
 class Graphics
 {
 private:
@@ -55,7 +73,15 @@ public:
 	static void initialize(HWND& hwnd);
 	static void finalize();
 
+	static void resetTarget();
+	static void clear(const Color& color);
+
+	static void beginDraw();
+	static void endDraw();
+
 	static ID2D1Factory* factory;
 	static ID2D1HwndRenderTarget* render;
 	static ID2D1SolidColorBrush* brush;
+
+	static ID2D1RenderTarget* currentTarget;
 };

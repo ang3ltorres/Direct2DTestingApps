@@ -37,10 +37,16 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	MSG msg;
 	ZeroMemory(&msg, sizeof(MSG));
 	msg.message = WM_NULL;
+	
+	Rect r{0.0f, 0.0f, 20.0f, 20.0f};
 
 	Graphics::initialize(hwnd);
+	RenderTexture rt(200, 200);
+	rt.beginDraw();
+	Graphics::clear({0, 255, 0});
+	r.draw({255, 0, 255});
+	rt.endDraw();
 
-	Rect r{0.0f, 0.0f, 20.0f, 20.0f};
 
 	while (true)
 	{
@@ -56,12 +62,13 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 		r.pos.x++;
 		r.size.y++;
 
-		Graphics::render->BeginDraw();
-		Graphics::render->Clear(D2D1::ColorF(0.0f, 1.0f, 1.0f));
+		Graphics::beginDraw();
+		Graphics::clear({0, 0, 255});
 
-		r.draw(255);
+		rt.draw();
+		r.draw({255, 0, 0, 125});
 
-		Graphics::render->EndDraw();
+		Graphics::endDraw();
 
 	}
 
