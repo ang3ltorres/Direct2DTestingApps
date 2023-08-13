@@ -47,6 +47,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	r.draw({255, 0, 255});
 	rt.endDraw();
 
+	RenderTexture rtCopy(rt);
+
 
 	while (true)
 	{
@@ -63,9 +65,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 		r.size.y++;
 
 		Graphics::beginDraw();
-		Graphics::clear({0, 0, 255});
+		Graphics::clear({0, 100, 255});
 
 		rt.draw();
+		rtCopy.draw({400, 400, 300, 300});
 		r.draw({255, 0, 0, 125});
 
 		Graphics::endDraw();

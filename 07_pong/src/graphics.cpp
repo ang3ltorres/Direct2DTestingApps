@@ -54,12 +54,42 @@ void Rect::draw(const Color& color)
 	Graphics::currentTarget->FillRectangle({pos.x, pos.y, pos.x + size.x, pos.y + size.y}, Graphics::brush);
 }
 
+RenderTexture::RenderTexture(const RenderTexture& other)
+{
+	static const D2D1_PIXEL_FORMAT pixelFormat =
+	{
+		.format = DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_UNORM,
+		.alphaMode = D2D1_ALPHA_MODE::D2D1_ALPHA_MODE_PREMULTIPLIED
+	};
+
+	const D2D1_SIZE_U size =
+	{
+		.width = other.bitmap->GetPixelSize().width,
+		.height = other.bitmap->GetPixelSize().height
+	};
+
+	Graphics::render->CreateCompatibleRenderTarget
+	(
+		nullptr,
+		&size,
+		&pixelFormat,
+		D2D1_COMPATIBLE_RENDER_TARGET_OPTIONS::D2D1_COMPATIBLE_RENDER_TARGET_OPTIONS_NONE,
+		&renderTarget
+	);
+
+	renderTarget->GetBitmap(&bitmap);
+	
+	D2D1_POINT_2U destination = {0, 0};
+	D2D1_RECT_U source = {0, 0, other.bitmap->GetPixelSize().width, other.bitmap->GetPixelSize().height};
+	bitmap->CopyFromBitmap(&destination, other.bitmap, &source);
+}
+
 RenderTexture::RenderTexture(unsigned int width, unsigned int height)
 {
 	static const D2D1_PIXEL_FORMAT pixelFormat =
 	{
-		.format = DXGI_FORMAT_UNKNOWN,
-		.alphaMode = D2D1_ALPHA_MODE_PREMULTIPLIED
+		.format = DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_UNORM,
+		.alphaMode = D2D1_ALPHA_MODE::D2D1_ALPHA_MODE_PREMULTIPLIED
 	};
 
 	const D2D1_SIZE_U size =
@@ -73,7 +103,7 @@ RenderTexture::RenderTexture(unsigned int width, unsigned int height)
 		nullptr,
 		&size,
 		&pixelFormat,
-		D2D1_COMPATIBLE_RENDER_TARGET_OPTIONS_NONE,
+		D2D1_COMPATIBLE_RENDER_TARGET_OPTIONS::D2D1_COMPATIBLE_RENDER_TARGET_OPTIONS_NONE,
 		&renderTarget
 	);
 
@@ -106,16 +136,16 @@ void RenderTexture::draw()
 		{
 			0.0f,
 			0.0f,
-			bitmap->GetSize().width,
-			bitmap->GetSize().height
+			float(bitmap->GetPixelSize().width),
+			float(bitmap->GetPixelSize().height)
 		},
 		1.0f,
 		D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR,
 		{
 			0.0f,
 			0.0f,
-			bitmap->GetSize().width,
-			bitmap->GetSize().height
+			float(bitmap->GetPixelSize().width),
+			float(bitmap->GetPixelSize().height)
 		}
 	);
 }
@@ -136,8 +166,8 @@ void RenderTexture::draw(const Rect& destination)
 		{
 			0.0f,
 			0.0f,
-			bitmap->GetSize().width,
-			bitmap->GetSize().height
+			float(bitmap->GetPixelSize().width),
+			float(bitmap->GetPixelSize().height)
 		}
 	);
 }
@@ -167,8 +197,8 @@ void RenderTexture::draw(const Rect& destination, const Rect& source)
 void Graphics::initialize(HWND& hwnd)
 {
 	// Create factory
-	const D2D1_FACTORY_OPTIONS factoryOptions = { .debugLevel = D2D1_DEBUG_LEVEL_NONE };
-	D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, factoryOptions, &factory);
+	const D2D1_FACTORY_OPTIONS factoryOptions = { .debugLevel = D2D1_DEBUG_LEVEL::D2D1_DEBUG_LEVEL_NONE };
+	D2D1CreateFactory(D2D1_FACTORY_TYPE::D2D1_FACTORY_TYPE_SINGLE_THREADED, factoryOptions, &factory);
 
 	// Create render target
 	RECT rect;
@@ -176,18 +206,18 @@ void Graphics::initialize(HWND& hwnd)
 	const D2D1_RENDER_TARGET_PROPERTIES rtProperties =
 	{
 		.type = D2D1_RENDER_TARGET_TYPE_HARDWARE,
-		.pixelFormat = { .format = DXGI_FORMAT_UNKNOWN, .alphaMode = D2D1_ALPHA_MODE_PREMULTIPLIED },
+		.pixelFormat = { .format = DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_UNORM, .alphaMode = D2D1_ALPHA_MODE::D2D1_ALPHA_MODE_PREMULTIPLIED },
 		.dpiX = 0.0f,
 		.dpiY = 0.0f,
-		.usage = D2D1_RENDER_TARGET_USAGE_NONE,
-		.minLevel = D2D1_FEATURE_LEVEL_10
+		.usage = D2D1_RENDER_TARGET_USAGE::D2D1_RENDER_TARGET_USAGE_NONE,
+		.minLevel = D2D1_FEATURE_LEVEL::D2D1_FEATURE_LEVEL_10
 	};
 
 	const D2D1_HWND_RENDER_TARGET_PROPERTIES hwndRtProperties =
 	{
 		.hwnd = hwnd,
 		.pixelSize = { .width = (UINT32)rect.right, .height = (UINT32)rect.bottom },
-		.presentOptions = D2D1_PRESENT_OPTIONS_NONE
+		.presentOptions = D2D1_PRESENT_OPTIONS::D2D1_PRESENT_OPTIONS_NONE
 	};
 
 	factory->CreateHwndRenderTarget(rtProperties, hwndRtProperties, &render);

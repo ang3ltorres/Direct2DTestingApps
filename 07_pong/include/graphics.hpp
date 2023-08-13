@@ -49,7 +49,7 @@ struct Rect
 struct RenderTexture
 {
 	RenderTexture() = delete;
-	RenderTexture(const RenderTexture& other) = delete;
+	RenderTexture(const RenderTexture& other);
 	RenderTexture(unsigned int width, unsigned int height);
 	~RenderTexture();
 
